@@ -1,0 +1,34 @@
+# Process title visible in monitoring logs and process listing
+title="liftlogic-sparkpost"
+
+# Default language to use
+language="en"
+
+[hrh]
+accountSid="API8973606936"
+authToken="222-a7983e88843a"
+url="https://a2papi.vasudev.io/api/sendSMS"
+timeout=60000
+
+[SQS]
+queue="https://sqs.us-east-2.amazonaws.com/973766504146/outbound_hrh_sms_delay_1.fifo"
+region="us-east-2"
+
+[throttle]
+active=true
+# interval in seconds
+interval=2
+messages_per_interval=1
+
+[Kinesis]
+region="us-east-2"
+stream="liftlogic_events_data_stream"
+shards=4
+waitBetweenDescribeCallsInSeconds=5
+
+[SMS]
+convoAPI="https://2ulj0e2r83.execute-api.us-east-1.amazonaws.com/dev/sms/convo"
+unsubAPI="https://5xp1wyp6ik.execute-api.us-east-1.amazonaws.com/dev/sms/unsub"
+campaignAPI="https://yczy4450m4.execute-api.us-east-1.amazonaws.com/dev/sms/campaign"
+subscriptionAPI="https://5yn2rmo37d.execute-api.us-east-1.amazonaws.com/dev/sms/subscription"
+clientAPI="https://aazy6l22jh.execute-api.us-east-1.amazonaws.com/dev/sms/client"

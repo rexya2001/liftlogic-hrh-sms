@@ -1,0 +1,3 @@
+[SQS]
+queue="https://sqs.us-west-2.amazonaws.com/594720500096/outbound_sparkpost_rex.fifo"
+region="us-west-2"
