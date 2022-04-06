@@ -1,6 +1,6 @@
 apps:
   - script : index.js
-    name   : teli-delay-1
+    name   : hrh-delay-1
     instances: 1
     watch  : false
     exec_mode  : fork
