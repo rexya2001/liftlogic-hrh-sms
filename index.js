@@ -140,9 +140,8 @@ var processSQSMessage = async (message) => {
                                 "api_password": data.sender_token || config.hrh.authToken,
                                 "sms_type": "P",
                                 "encoding": "U",
-                                "sender_id": "MessageAll",
+                                "sender_id": data.did.replace("+", ""),
                                 "phonenumber": phoneNumber.number.replace("+", ""),
-                                "source": data.did.replace("+", ""),
                                 "textmessage": smsBody.replace("[URL]", url),
                                 "callback_url": "https://d7d71366fd90c63d7083fbb3d0a38c87.m.pipedream.net"
                             };
