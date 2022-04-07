@@ -186,7 +186,7 @@ var processSQSMessage = async (message) => {
                             console.log("Hrh response id:", response.data.message_id);
 
                             // send event
-                            resSms.api = response;
+                            resSms.api = response.data;
                             resSms.destination = sms.phonenumber;
                             resSms.source = sms.source;
                             resSms.phone = phoneNumber.number;
