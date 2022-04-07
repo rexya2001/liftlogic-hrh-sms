@@ -187,10 +187,10 @@ var processSQSMessage = async (message) => {
 
                             // send event
                             resSms.api = response;
-                            resSms.destination = resSms.destination.replace("+1", "");
-                            resSms.source = resSms.source.replace("+1", "");
-                            resSms.phone = resSms.destination;
-                            resSms.did = resSms.source;
+                            resSms.destination = sms.phonenumber;
+                            resSms.source = sms.source;
+                            resSms.phone = phoneNumber.number;
+                            resSms.did = data.did;
                             sendEvent({
                                 event: "sends",
                                 event_data: JSON.stringify(resSms).substring(0, 4000),
