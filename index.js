@@ -182,8 +182,8 @@ var processSQSMessage = async (message) => {
 
                             console.log("!!!!! Hrh API POST Message:", JSON.stringify(sms));
                             let response = await axios.post(config.hrh.url, sms);
-                            console.log("Hrh response:", response);
-                            console.log("Hrh response id:", response.message_id);
+                            console.log("Hrh response:", response.data);
+                            console.log("Hrh response id:", response.data.message_id);
 
                             // send event
                             resSms.api = response;
