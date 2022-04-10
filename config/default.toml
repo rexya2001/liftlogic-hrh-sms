@@ -9,6 +9,7 @@ accountSid="API8973606936"
 authToken="222-a7983e88843a"
 url="https://a2papi.vasudev.io/api/sendSMS"
 timeout=60000
+wh="https://lpi.lflogic.com/api/v1.0/webhooks/hmhstatus?access_token=d7118fb4418aba495fe1246847b15c4a02ae1276"
 
 [SQS]
 queue="https://sqs.us-east-2.amazonaws.com/973766504146/outbound_hrh_sms_delay_1.fifo"

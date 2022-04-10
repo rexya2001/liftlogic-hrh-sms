@@ -143,7 +143,7 @@ var processSQSMessage = async (message) => {
                                 "sender_id": data.did.replace("+", ""),
                                 "phonenumber": phoneNumber.number.replace("+", ""),
                                 "textmessage": smsBody.replace("[URL]", url),
-                                "callback_url": "https://d7d71366fd90c63d7083fbb3d0a38c87.m.pipedream.net"
+                                "callback_url": config.hrh.wh
                             };
                             
                             // create client if doesn't exists
