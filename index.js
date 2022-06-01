@@ -127,9 +127,10 @@ var processSQSMessage = async (message) => {
 
                             let phoneInfo = {};
                             if (data.validate_phone) {
-                                let url = `{config.SMS.emailoversightAPI}&phonenumber={phoneNumber.number}`;
+                                let url = `${config.SMS.emailoversightAPI}&phonenumber=${phoneNumber.number}`;
                                 console.log("Looking API for number:", phoneNumber.number, " is:", url);
                                 let response = await axios.get(url);
+                                console.log("Looking API response:", response); 
                                 phoneInfo = {
                                     carrier: { 
                                         name: response.Carrier,
