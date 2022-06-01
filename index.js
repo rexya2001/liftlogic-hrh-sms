@@ -125,77 +125,112 @@ var processSQSMessage = async (message) => {
                         console.log("===> is a category DUPE:", isDuped);
                         if (!isDuped) {
 
-                            // templetize the template :P
-                            const template = Handlebars.compile(data.template_text);
-                            const smsBody = template(data.template_data || {});
-
-                            console.log("Nus hash:", rnus.hash);
-                            var url = rnus.short_url;
-                            if (data.template_domain) {
-                                url = "https://" + data.template_domain + "/" + rnus.hash;
+                            let phoneInfo = {};
+                            if (data.validate_phone) {
+                                let url = `{config.SMS.emailoversightAPI}&phonenumber={phoneNumber.number}`;
+                                console.log("Looking API for number:", phoneNumber.number, " is:", url);
+                                let response = await axios.get(url);
+                                phoneInfo = {
+                                    carrier: { 
+                                        name: response.Carrier,
+                                        type: response.Status,
+                                        status: response.Type,
+                                        error_code: null 
+                                    }
+                                }
+                            } else {
+                                // created dummy carrier
+                                phoneInfo = {
+                                    carrier: { 
+                                        name: 'Liftlogic',
+                                        type: 'mobile',
+                                        status: '',
+                                        error_code: null 
+                                    }
+                                }
                             }
                             
-                            let sms = {
-                                "api_id": data.sender_id || config.hrh.accountSid,
-                                "api_password": data.sender_token || config.hrh.authToken,
-                                "sms_type": "P",
-                                "encoding": "U",
-                                "sender_id": data.did.replace("+", ""),
-                                "phonenumber": phoneNumber.number.replace("+", ""),
-                                "textmessage": smsBody.replace("[URL]", url),
-                                "callback_url": config.hrh.wh
-                            };
-                            
-                            // create client if doesn't exists
-                            let ct = await getClient(sms, {}, data);
-                            if (ct.data.body.data && _.isEmpty(ct.data.body.data)) {
-                                console.log("!!!!! =====> New client");
-                                ct = await createClient(sms, {}, data);
+                            // validate phone
+                            if (phoneInfo.carrier && phoneInfo.carrier.type && 'mobile' === phoneInfo.carrier.type) {
+
+                                // templetize the template :P
+                                const template = Handlebars.compile(data.template_text);
+                                const smsBody = template(data.template_data || {});
+
+                                console.log("Nus hash:", rnus.hash);
+                                var url = rnus.short_url;
+                                if (data.template_domain) {
+                                    url = "https://" + data.template_domain + "/" + rnus.hash;
+                                }
+                                
+                                let sms = {
+                                    "api_id": data.sender_id || config.hrh.accountSid,
+                                    "api_password": data.sender_token || config.hrh.authToken,
+                                    "sms_type": "P",
+                                    "encoding": "U",
+                                    "sender_id": data.did.replace("+", ""),
+                                    "phonenumber": phoneNumber.number.replace("+", ""),
+                                    "textmessage": smsBody.replace("[URL]", url),
+                                    "callback_url": config.hrh.wh
+                                };
+                                
+                                // create client if doesn't exists
+                                let ct = await getClient(sms, {}, data);
+                                if (ct.data.body.data && _.isEmpty(ct.data.body.data)) {
+                                    console.log("!!!!! =====> New client");
+                                    ct = await createClient(sms, {}, data);
+                                } else {
+                                    console.log("!!!!! =====> Existing client");
+                                }
+
+                                // create campaign in SMSTrain
+                                let cmp = await getCampaign(sms, {}, data);
+                                if (cmp.data.body.data && _.isEmpty(cmp.data.body.data)) {
+                                    console.log("!!!!! =====> New campaign:");
+                                    cmp = await createCampaign(sms, {}, data);
+                                } else {
+                                    console.log("!!!!! =====> Existing campaign");
+                                }
+
+                                let resSms = {
+                                    destination: phoneNumber.number,
+                                    source: data.did,
+                                    message: sms.message,
+                                    sid: uuid.v1()
+                                };
+                                // create subscription
+                                await createSubscription(sms, resSms, data);
+
+                                // create  conversation in SMSTrain
+                                await createConversation(sms, resSms, data);
+
+                                // inc lead count in SMSTrain for the campaign
+                                await incLeadCount(sms, {}, data);
+
+                                console.log("!!!!! Hrh API POST Message:", JSON.stringify(sms));
+                                let response = await axios.post(config.hrh.url, sms);
+                                console.log("Hrh response:", response.data);
+                                console.log("Hrh response id:", response.data.message_id);
+
+                                // send event
+                                resSms.api = response.data;
+                                resSms.destination = sms.phonenumber;
+                                resSms.source = sms.source;
+                                resSms.phone = phoneNumber.number;
+                                resSms.did = data.did;
+                                sendEvent({
+                                    event: "sends",
+                                    event_data: JSON.stringify(resSms).substring(0, 4000),
+                                    data: data
+                                });
                             } else {
-                                console.log("!!!!! =====> Existing client");
+                                // send event
+                                sendEvent({
+                                    event: "undeliverable",
+                                    event_data: JSON.stringify(phoneInfo).substring(0, 4000),
+                                    data: data
+                                });                               
                             }
-
-                            // create campaign in SMSTrain
-                            let cmp = await getCampaign(sms, {}, data);
-                            if (cmp.data.body.data && _.isEmpty(cmp.data.body.data)) {
-                                console.log("!!!!! =====> New campaign:");
-                                cmp = await createCampaign(sms, {}, data);
-                            } else {
-                                console.log("!!!!! =====> Existing campaign");
-                            }
-
-                            let resSms = {
-                                destination: phoneNumber.number,
-                                source: data.did,
-                                message: sms.message,
-                                sid: uuid.v1()
-                            };
-                            // create subscription
-                            await createSubscription(sms, resSms, data);
-
-                            // create  conversation in SMSTrain
-                            await createConversation(sms, resSms, data);
-
-                            // inc lead count in SMSTrain for the campaign
-                            await incLeadCount(sms, {}, data);
-
-                            console.log("!!!!! Hrh API POST Message:", JSON.stringify(sms));
-                            let response = await axios.post(config.hrh.url, sms);
-                            console.log("Hrh response:", response.data);
-                            console.log("Hrh response id:", response.data.message_id);
-
-                            // send event
-                            resSms.api = response.data;
-                            resSms.destination = sms.phonenumber;
-                            resSms.source = sms.source;
-                            resSms.phone = phoneNumber.number;
-                            resSms.did = data.did;
-                            sendEvent({
-                                event: "sends",
-                                event_data: JSON.stringify(resSms).substring(0, 4000),
-                                data: data
-                            });
-
                         } else { // no duplicate record
                             console.log("!!!!! Category dupe detected");
                         }
